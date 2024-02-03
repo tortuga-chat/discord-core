@@ -2,8 +2,8 @@ package com.pedrovh.tortuga.discord.core.listener;
 
 import com.pedrovh.tortuga.discord.core.command.BotCommandLoader;
 import com.pedrovh.tortuga.discord.core.command.Command;
-import com.pedrovh.tortuga.discord.core.exception.BotException;
 import com.pedrovh.tortuga.discord.core.command.slash.SlashCommandHandler;
+import com.pedrovh.tortuga.discord.core.exception.BotException;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.listener.interaction.SlashCommandCreateListener;
@@ -30,7 +30,7 @@ public abstract class BaseSlashCommandListener implements SlashCommandCreateList
         SlashCommandInteraction interaction = event.getSlashCommandInteraction();
         Class<? extends SlashCommandHandler> handlerClass = BotCommandLoader.getHandlerForSlash(interaction.getCommandName());
         if (handlerClass == null) {
-            LOG.error("Slash handler not found for command '{}'", interaction.getCommandName());
+            handlerNotFound(event);
             return;
         }
 
@@ -38,7 +38,7 @@ public abstract class BaseSlashCommandListener implements SlashCommandCreateList
 
         CompletableFuture.runAsync(() -> {
             try {
-                accept(handler, event);
+                handle(handler, event);
             } catch (BotException e) {
                 LOG.error(String.format("Error handling slash command %s", interaction.getFullCommandName()), e);
 
@@ -50,8 +50,22 @@ public abstract class BaseSlashCommandListener implements SlashCommandCreateList
         });
     }
 
-    protected void accept(SlashCommandHandler handler, SlashCommandCreateEvent event) throws BotException {
+    /**
+     * Executes the {@link SlashCommandHandler#handle(SlashCommandCreateEvent)} of the handler.
+     * @param handler the command handler
+     * @param event the slash command event
+     * @throws BotException in case something goes wrong
+     */
+    protected void handle(SlashCommandHandler handler, SlashCommandCreateEvent event) throws BotException {
         handler.handle(event);
+    }
+
+    /**
+     * Override this method if you have some logic in case the handler is not found.
+     * @param event the slash command event
+     */
+    protected void handlerNotFound(SlashCommandCreateEvent event) {
+        LOG.error("Slash handler not found for command '{}'", event.getSlashCommandInteraction().getCommandName());
     }
 
     protected <T> T getInstanceOf(Class<T> clazz) {

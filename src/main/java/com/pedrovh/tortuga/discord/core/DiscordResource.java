@@ -3,6 +3,7 @@ package com.pedrovh.tortuga.discord.core;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Properties;
@@ -41,6 +42,17 @@ public class DiscordResource {
         if(value == null) return null;
         try {
             return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            LOG.warn("Unable to parse integer for key '{}'", key);
+            return null;
+        }
+    }
+
+    public static Color getColor(String key) {
+        String value = get(key);
+        if(value == null) return null;
+        try {
+            return Color.decode(value);
         } catch (NumberFormatException e) {
             LOG.warn("Unable to parse integer for key '{}'", key);
             return null;
