@@ -4,8 +4,8 @@ import com.pedrovh.tortuga.discord.core.command.BotCommandLoader;
 import com.pedrovh.tortuga.discord.core.command.Command;
 import com.pedrovh.tortuga.discord.core.command.slash.SlashCommandHandler;
 import com.pedrovh.tortuga.discord.core.exception.BotException;
+import org.javacord.api.entity.message.MessageFlag;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
-import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.listener.interaction.SlashCommandCreateListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,24 +27,40 @@ public abstract class BaseSlashCommandListener implements SlashCommandCreateList
      */
     @Override
     public void onSlashCommandCreate(SlashCommandCreateEvent event) {
-        SlashCommandInteraction interaction = event.getSlashCommandInteraction();
-        Class<? extends SlashCommandHandler> handlerClass = BotCommandLoader.getHandlerForSlash(interaction.getCommandName());
-        if (handlerClass == null) {
-            handlerNotFound(event);
-            return;
-        }
+        var interaction = event.getSlashCommandInteraction();
+        LOG.debug("Slash command '{}' sent by '{}' in '{}'",
+                interaction.getFullCommandName(),
+                interaction.getUser().getName(),
+                interaction.getChannel());
 
-        SlashCommandHandler handler = getInstanceOf(handlerClass);
+        var handlerClass = BotCommandLoader.getHandlerForSlash(interaction.getCommandName());
 
         CompletableFuture.runAsync(() -> {
             try {
-                handle(handler, event);
+                if (handlerClass == null) {
+                    handlerNotFound(event);
+                    return;
+                }
+                handle(getInstanceOf(handlerClass), event);
             } catch (BotException e) {
-                LOG.error(String.format("Error handling slash command %s", interaction.getFullCommandName()), e);
+                if (e.isWarning())
+                    LOG.warn(String.format("Error handling slash command %s", interaction.getFullCommandName()));
+                else
+                    LOG.warn(String.format("Error handling slash command %s", interaction.getFullCommandName()), e);
 
+                var responder = interaction
+                        .createImmediateResponder()
+                        .addEmbed(e.getEmbed());
+                if (e.getFlags() != null)
+                    responder.setFlags(e.getFlags());
+                responder
+                        .respond();
+            } catch (Exception e) {
+                LOG.error(String.format("Error handling slash command %s", interaction.getFullCommandName()), e);
                 interaction
                         .createImmediateResponder()
-                        .addEmbed(e.getEmbed())
+                        .addEmbed(new BotException(e).getEmbed())
+                        .setFlags(MessageFlag.EPHEMERAL)
                         .respond();
             }
         });
@@ -64,7 +80,7 @@ public abstract class BaseSlashCommandListener implements SlashCommandCreateList
      * Override this method if you have some logic in case the handler is not found.
      * @param event the slash command event
      */
-    protected void handlerNotFound(SlashCommandCreateEvent event) {
+    protected void handlerNotFound(SlashCommandCreateEvent event) throws BotException {
         LOG.error("Slash handler not found for command '{}'", event.getSlashCommandInteraction().getCommandName());
     }
 

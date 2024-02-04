@@ -25,7 +25,7 @@ public class DiscordResource {
         if (prop.isEmpty()) {
             load();
         }
-        String value = prop.getProperty(key);
+        var value = prop.getProperty(key);
         if (value == null) {
             LOG.debug("Value for key '{}' not found in properties", key);
             return null;
@@ -38,7 +38,7 @@ public class DiscordResource {
     }
 
     public static Integer getInt(String key) {
-        String value = get(key);
+        var value = get(key);
         if(value == null) return null;
         try {
             return Integer.parseInt(value);
@@ -49,7 +49,7 @@ public class DiscordResource {
     }
 
     public static Color getColor(String key) {
-        String value = get(key);
+        var value = get(key);
         if(value == null) return null;
         try {
             return Color.decode(value);

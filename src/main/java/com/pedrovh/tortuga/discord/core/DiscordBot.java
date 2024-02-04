@@ -99,8 +99,8 @@ public class DiscordBot {
     protected void attachListeners() {
         REFLECTIONS.getTypesAnnotatedWith(Listener.class).forEach(listener -> {
             if (GloballyAttachableListener.class.isAssignableFrom(listener)) {
-                Class<?> registerAs = listener.getAnnotation(Listener.class).value();
-                GloballyAttachableListener instance = (GloballyAttachableListener) getInstanceOf(listener);
+                var registerAs = listener.getAnnotation(Listener.class).value();
+                var instance = (GloballyAttachableListener) getInstanceOf(listener);
 
                 LOG.debug("Registering {} as a {}", listener.getSimpleName(), registerAs.getSimpleName());
                 this.builder.addListener(registerAs.asSubclass(GloballyAttachableListener.class), instance);

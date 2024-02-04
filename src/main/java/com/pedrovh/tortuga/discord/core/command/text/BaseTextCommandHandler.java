@@ -7,8 +7,6 @@ import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.event.message.MessageCreateEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -20,7 +18,6 @@ import static com.pedrovh.tortuga.discord.core.DiscordProperties.COMMAND_TEXT_PR
  */
 public abstract class BaseTextCommandHandler implements TextCommandHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BaseTextCommandHandler.class);
     protected MessageCreateEvent event;
     protected DiscordApi api;
     protected TextChannel channel;
@@ -31,10 +28,6 @@ public abstract class BaseTextCommandHandler implements TextCommandHandler {
     @Override
     public void handle(MessageCreateEvent event) throws BotException {
         load(event);
-        LOG.info("User {} sent text command '{}' in {}",
-                user.getName(),
-                args.getFirst(),
-                channel);
         handle();
     }
 
@@ -45,8 +38,8 @@ public abstract class BaseTextCommandHandler implements TextCommandHandler {
         this.user = event.getMessageAuthor();
         this.message = event.getMessage();
 
-        String prefix = DiscordResource.get(COMMAND_TEXT_PREFIX);
-        String content = prefix != null ? message.getContent().substring(prefix.length()) : message.getContent();
+        var prefix = DiscordResource.get(COMMAND_TEXT_PREFIX);
+        var content = prefix != null ? message.getContent().substring(prefix.length()) : message.getContent();
         this.args = List.of(content.split(" "));
     }
 

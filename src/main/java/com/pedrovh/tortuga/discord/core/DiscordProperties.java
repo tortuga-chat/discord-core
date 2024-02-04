@@ -6,5 +6,6 @@ public class DiscordProperties {
     public static final String COMMAND_TEXT_PREFIX = "command.text.prefix";
     public static final String MESSAGE_CHARACTER_LIMIT = "message.character.limit";
     public static final String COLOR_SUCCESS = "color.success";
+    public static final String COLOR_WARNING = "color.warning";
     public static final String COLOR_ERROR = "color.error";
 }

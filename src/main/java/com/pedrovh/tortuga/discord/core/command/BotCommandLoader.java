@@ -23,18 +23,18 @@ public class BotCommandLoader {
         LOG.debug("Populating command handlers cache...");
 
         REFLECTIONS.getTypesAnnotatedWith(Command.class).forEach(handler -> {
-            Command command = handler.getAnnotation(Command.class);
+            var command = handler.getAnnotation(Command.class);
 
             if (SlashCommandHandler.class.isAssignableFrom(handler)) {
                 LOG.debug("Assigning {} to handle /{}", handler.getName(), command.name());
                 SLASH_HANDLERS.put(command.name(), handler.asSubclass(SlashCommandHandler.class));
             }
             if (TextCommandHandler.class.isAssignableFrom(handler)) {
-                LOG.debug("Assigning {} to handle {}{}", handler.getName(), DiscordResource.get(COMMAND_TEXT_PREFIX), command.name());
+                LOG.debug("Assigning {} to handle {}{}", handler.getName(), DiscordResource.get(COMMAND_TEXT_PREFIX,""), command.name());
                 TEXT_HANDLERS.put(command.name(), handler.asSubclass(TextCommandHandler.class));
             }
         });
-        LOG.info("successfully loaded handlers for the following commands: {}", getCommands());
+        LOG.info("Successfully loaded command handlers");
     }
 
     public static Set<String> getCommands() {

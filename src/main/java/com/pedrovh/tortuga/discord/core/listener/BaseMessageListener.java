@@ -5,7 +5,6 @@ import com.pedrovh.tortuga.discord.core.command.BotCommandLoader;
 import com.pedrovh.tortuga.discord.core.command.text.TextCommandHandler;
 import com.pedrovh.tortuga.discord.core.exception.BotException;
 import org.javacord.api.entity.message.Message;
-import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
 import org.slf4j.Logger;
@@ -25,9 +24,9 @@ public abstract class BaseMessageListener implements MessageCreateListener {
      */
     @Override
     public void onMessageCreate(MessageCreateEvent event) {
-        Message message = event.getMessage();
-        String content = message.getContent();
-        String prefix = DiscordResource.get(COMMAND_TEXT_PREFIX);
+        var message = event.getMessage();
+        var content = message.getContent();
+        var prefix = DiscordResource.get(COMMAND_TEXT_PREFIX);
 
         if(!validate(message, prefix)) return;
 
@@ -35,21 +34,35 @@ public abstract class BaseMessageListener implements MessageCreateListener {
             content = content.substring(prefix.length());
 
         final String command = content.split(" ")[0];
-        Class<? extends TextCommandHandler> handlerClass = BotCommandLoader.getHandlerForText(command);
-
-        if (handlerClass == null) {
-            handlerNotFound(event);
-            return;
-        }
-
-        final TextCommandHandler handler = getInstanceOf(handlerClass);
+        var handlerClass = BotCommandLoader.getHandlerForText(command);
 
         CompletableFuture.runAsync(() -> {
             try {
-                handle(handler, event);
+                if (handlerClass == null) {
+                    handlerNotFound(event);
+                    return;
+                }
+                LOG.info("User {} sent text command '{}' in {}",
+                        message.getAuthor().getName(),
+                        command,
+                        message.getChannel());
+
+                var instance = getInstanceOf(handlerClass);
+
+                if (!instance.enabledInDMs() && !message.getChannel().getType().isServerChannelType())
+                    return;
+
+                handle(instance, event);
+
             } catch (BotException e) {
-                LOG.error(String.format("Error handling text command %s", command), e);
+                if (e.isWarning())
+                    LOG.warn(String.format("Error handling text command %s", command));
+                else
+                    LOG.warn(String.format("Error handling text command %s", command), e);
                 message.reply(e.getEmbed());
+            } catch (Exception e) {
+                LOG.error(String.format("Error handling text command %s", command), e);
+                message.reply(new BotException(e).getEmbed());
             }
         });
     }
@@ -70,8 +83,8 @@ public abstract class BaseMessageListener implements MessageCreateListener {
      * Remember to override {@link #validate(Message, String)} if that's your case and you have a prefix configured.
      * @param event the slash command event
      */
-    protected void handlerNotFound(MessageCreateEvent event) {
-        LOG.error("Text handler not found for command '{}'", event.getMessageContent().split(" ")[0]);
+    protected void handlerNotFound(MessageCreateEvent event) throws BotException {
+        LOG.warn("Text handler not found for command '{}'", event.getMessageContent().split(" ")[0]);
     }
 
     /**
@@ -80,8 +93,8 @@ public abstract class BaseMessageListener implements MessageCreateListener {
      * @return True if the bot should understand the message as a command
      */
     protected boolean validate(final Message message, final String prefix) {
-        MessageAuthor author = message.getAuthor();
-        String content = message.getContent();
+        var author = message.getAuthor();
+        var content = message.getContent();
 
         return author != null &&
                !author.isYourself() &&
