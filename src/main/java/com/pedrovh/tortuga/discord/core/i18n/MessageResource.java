@@ -1,18 +1,35 @@
 package com.pedrovh.tortuga.discord.core.i18n;
 
+import org.javacord.api.interaction.SlashCommandOptionChoice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
+import java.net.URL;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class MessageResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(MessageResource.class);
-    protected static final ConcurrentHashMap<Locale, ResourceBundle> BUNDLES = new ConcurrentHashMap<>();
+    private static final String BUNDLE_NAME = "i18n/messages";
+    protected static final Map<Locale, ResourceBundle> BUNDLES = new ConcurrentHashMap<>();
+
+    static {
+        for (Locale locale : Locale.getAvailableLocales()) {
+            try {
+                URL rb = ClassLoader.getSystemResource(String.format("%s_%s.properties", BUNDLE_NAME, locale.toString()));
+                if(rb != null)
+                {
+                    LOG.debug("Loading messages resource for {}", locale);
+                    BUNDLES.put(locale, ResourceBundle.getBundle(BUNDLE_NAME, locale));
+                }
+            } catch (MissingResourceException ex) {
+                LOG.info("Resource bundle {} not found", BUNDLE_NAME);
+            }
+        }
+    }
 
     public static String getMessage(String key) {
         return getMessage(Locale.getDefault(), key);
@@ -23,9 +40,6 @@ public class MessageResource {
     }
 
     public static String getMessage(Locale locale, String key) {
-        if (!BUNDLES.containsKey(locale)) {
-            load(locale);
-        }
         try {
             return parseAnyInnerKeys(locale, BUNDLES.get(locale).getString(key));
         } catch (MissingResourceException e) {
@@ -44,9 +58,21 @@ public class MessageResource {
         return value;
     }
 
-    public static void load(Locale locale) {
-        LOG.info("Loading i18n.messages bundle for {}", locale);
-        BUNDLES.put(locale, ResourceBundle.getBundle("i18n.messages", locale, MessageResource.class.getClassLoader()));
+    public static List<SlashCommandOptionChoice> getSupportedLocalesAsChoices() {
+        return getSupportedLocales()
+                .stream()
+                .map(tag -> tag.replace("_", "-"))
+                .map(Locale::forLanguageTag)
+                .map(locale -> SlashCommandOptionChoice.create(locale.getDisplayName(), locale.toString()))
+                .collect(Collectors.toList());
+    }
+
+    public static List<String> getSupportedLocales() {
+        return BUNDLES.keySet()
+                .stream()
+                .map(Locale::toString)
+                .map(str -> str.replace('_', '-'))
+                .collect(Collectors.toList());
     }
 
     private static String parseAnyInnerKeys(Locale locale, String value) {

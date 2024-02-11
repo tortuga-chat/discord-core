@@ -48,6 +48,21 @@ public class DiscordResource {
         }
     }
 
+    public static Boolean getBoolean(String key) {
+        var value = get(key);
+        if(value == null) return null;
+        try {
+            return Boolean.parseBoolean(value);
+        } catch (NumberFormatException e) {
+            LOG.warn("Unable to parse boolean for key '{}'", key);
+            return null;
+        }
+    }
+
+    public static Boolean getBoolean(String key, boolean defaultValue) {
+        return Optional.ofNullable(getBoolean(key)).orElse(defaultValue);
+    }
+
     public static Color getColor(String key) {
         var value = get(key);
         if(value == null) return null;

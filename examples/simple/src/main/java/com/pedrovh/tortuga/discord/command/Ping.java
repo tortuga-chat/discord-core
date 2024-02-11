@@ -29,7 +29,7 @@ public class Ping extends BaseSlashCommandHandler {
                 .setColor(Color.decode(DiscordResource.get(COLOR_SUCCESS, "#00ff00")));
         if (isTag)
             embed.setDescription(user.getMentionTag());
-        responder
+        interaction.createImmediateResponder()
                 .addEmbed(embed)
                 .respond()
                 .whenComplete((r, e) -> LOG.debug("Sent pong response"));

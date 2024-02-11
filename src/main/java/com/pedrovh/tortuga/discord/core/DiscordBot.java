@@ -56,7 +56,11 @@ public class DiscordBot {
         return CompletableFuture
                 .runAsync(this::attachListeners)
                 .thenCompose(v -> this.builder.login())
-                .whenComplete((a, e) -> this.api = a);
+                .whenComplete((a, e) -> this.api = a)
+                .whenComplete((a, e) -> {
+                    if (DiscordResource.getBoolean(DiscordProperties.DISCORD_COMMAND_UPDATE, false))
+                        updateSlashCommands();
+                });
     }
 
     public void updateSlashCommands() {
@@ -67,9 +71,8 @@ public class DiscordBot {
                                 .collect(Collectors.toSet())));
     }
 
-    protected Set<SlashCommandBuilder> getSlashCommands() {
+    public Set<SlashCommandBuilder> getSlashCommands() {
         return BotCommandLoader.getSlashHandlers().stream()
-                .filter(SlashCommandHandler.class::isAssignableFrom)
                 .map(handler -> {
                     Command command = handler.getAnnotation(Command.class);
                     SlashCommandHandler instance = getInstanceOf(handler);
