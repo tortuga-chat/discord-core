@@ -28,7 +28,7 @@ public abstract class BaseSlashCommandListener implements SlashCommandCreateList
     @Override
     public void onSlashCommandCreate(SlashCommandCreateEvent event) {
         var interaction = event.getSlashCommandInteraction();
-        LOG.debug("Slash command '{}' sent by '{}' in '{}'",
+        LOG.info("Slash command '{}' sent by '{}' in '{}'",
                 interaction.getFullCommandName(),
                 interaction.getUser().getName(),
                 interaction.getChannel());
