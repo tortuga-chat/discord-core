@@ -44,8 +44,10 @@ public class MessageResource {
             return parseAnyInnerKeys(locale, BUNDLES.get(locale).getString(key));
         } catch (MissingResourceException e) {
             LOG.warn("Resource value not found for key: '{}' for locale '{}'", key, locale);
-            return null;
+        } catch (NullPointerException e) {
+            LOG.error(String.format("Bundle not found for locale %s", locale));
         }
+        return null;
     }
 
     public static String getMessage(Locale locale, String key, Object... args) {
