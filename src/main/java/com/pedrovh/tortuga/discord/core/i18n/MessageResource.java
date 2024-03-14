@@ -19,10 +19,10 @@ public class MessageResource {
     static {
         for (Locale locale : Locale.getAvailableLocales()) {
             try {
-                URL rb = ClassLoader.getSystemResource(String.format("%s_%s.properties", BUNDLE_NAME, locale.toString()));
+                URL rb = findResourceURL(locale.toString());
                 if(rb != null)
                 {
-                    LOG.debug("Loading messages resource for {}", locale);
+                    LOG.trace("Loading messages resource for {}", locale);
                     BUNDLES.put(locale, ResourceBundle.getBundle(BUNDLE_NAME, locale));
                 }
             } catch (MissingResourceException ex) {
@@ -77,7 +77,17 @@ public class MessageResource {
                 .collect(Collectors.toList());
     }
 
-    private static String parseAnyInnerKeys(Locale locale, String value) {
+    private static URL findResourceURL(final String locale) {
+        URL url = ClassLoader.getSystemResource(String.format("%s_%s.properties", BUNDLE_NAME, locale));
+        if (url == null) {
+            int i = locale.lastIndexOf('_');
+            if (i > 0)
+                url = findResourceURL(locale.substring(0, i));
+        }
+        return url;
+    }
+
+    private static String parseAnyInnerKeys(final Locale locale, String value) {
         var pattern = Pattern.compile("\\{[^}]*}");
         var matcher = pattern.matcher(value);
 
