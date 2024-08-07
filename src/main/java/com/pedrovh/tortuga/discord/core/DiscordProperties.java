@@ -1,5 +1,6 @@
 package com.pedrovh.tortuga.discord.core;
 
+@SuppressWarnings({"unused","java:S1118"})
 public class DiscordProperties {
     public static final String BASE_PACKAGE = "basePackage";
     public static final String DISCORD_TOKEN = "token";

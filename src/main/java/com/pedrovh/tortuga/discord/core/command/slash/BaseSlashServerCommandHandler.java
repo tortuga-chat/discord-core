@@ -5,6 +5,7 @@ import com.pedrovh.tortuga.discord.core.exception.ServerRequiredException;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 
+@SuppressWarnings("unused")
 public abstract class BaseSlashServerCommandHandler extends BaseSlashCommandHandler {
 
     protected Server server;

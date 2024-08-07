@@ -10,47 +10,40 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
+@SuppressWarnings({"unused", "java:S6548"})
 public class SchedulerService {
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerService.class);
     private static final Reflections REFLECTIONS = new Reflections(DiscordResource.get(DiscordProperties.BASE_PACKAGE));
-    private static ScheduledExecutorService SCHEDULER;
     private static SchedulerService instance;
 
-    private SchedulerService() {
-        init();
-    }
+    private SchedulerService() {}
 
-    public static SchedulerService getInstance() {
-        if(instance == null)
-            instance = new SchedulerService();
-        return instance;
-    }
-
-    protected void init() {
+    public static void start() {
         LOG.info("Initializing scheduler");
         var instances = REFLECTIONS.getTypesAnnotatedWith(Task.class)
                 .stream()
-                .map(this::getInstanceOf)
+                .map(SchedulerService::getInstanceOf)
                 .collect(Collectors.toSet());
 
-        SCHEDULER = Executors.newScheduledThreadPool(instances.size());
+        try (ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(instances.size())) {
+            instances.forEach(instance -> {
+                if (!(instance instanceof Runnable)) {
+                    LOG.error("Class {} should implement Runnable interface!", instance.getClass());
+                    return;
+                }
+                var annotation = instance.getClass().getAnnotation(Task.class);
+                var delay = annotation.initialDelay();
+                var period = annotation.period();
+                var unit = annotation.unit();
 
-        instances.forEach(instance -> {
-            if (!(instance instanceof Runnable)) {
-                LOG.error(String.format("Class %s should implement Runnable interface!", instance.getClass()));
-                return;
-            }
-            var annotation = instance.getClass().getAnnotation(Task.class);
-            var delay = annotation.initialDelay();
-            var period = annotation.period();
-            var unit = annotation.unit();
-
-            LOG.debug("Scheduling class to run {} with a delay of {} {} and period of {} {}", instance.getClass().getName(), delay,  unit, period, unit);
-            SCHEDULER.scheduleAtFixedRate((Runnable) instance, delay, period, unit);
-        });
+                LOG.debug("Scheduling class to run {} with a delay of {} {} and period of {} {}", instance.getClass().getName(), delay,  unit, period, unit);
+                scheduler.scheduleAtFixedRate((Runnable) instance, delay, period, unit);
+            });
+        }
     }
 
-    protected <T> T getInstanceOf(Class<T> clazz) {
+    @SuppressWarnings("java:S112")
+    protected static <T> T getInstanceOf(Class<T> clazz) {
         try {
             return clazz.getDeclaredConstructor().newInstance();
         } catch (Exception e) {

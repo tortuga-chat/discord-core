@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
  * When a {@link SlashCommandCreateEvent} is created, the handler is instantiated through {@link BaseSlashCommandListener#getInstanceOf(Class)}
  * to handle the request. Override that method if you wish to control how the handler is instantiated.
  */
+@SuppressWarnings("unused")
 public abstract class BaseSlashCommandListener implements SlashCommandCreateListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(BaseSlashCommandListener.class);
@@ -44,7 +45,7 @@ public abstract class BaseSlashCommandListener implements SlashCommandCreateList
                 handle(getInstanceOf(handlerClass), event);
             } catch (BotException e) {
                 if (e.isWarning())
-                    LOG.warn(String.format("Error handling slash command %s", interaction.getFullCommandName()));
+                    LOG.warn("Error handling slash command {}", interaction.getFullCommandName());
                 else
                     LOG.warn(String.format("Error handling slash command %s", interaction.getFullCommandName()), e);
 
@@ -80,10 +81,12 @@ public abstract class BaseSlashCommandListener implements SlashCommandCreateList
      * Override this method if you have some logic in case the handler is not found.
      * @param event the slash command event
      */
+    @SuppressWarnings("java:S1130")
     protected void handlerNotFound(SlashCommandCreateEvent event) throws BotException {
         LOG.error("Slash handler not found for command '{}'", event.getSlashCommandInteraction().getCommandName());
     }
 
+    @SuppressWarnings("java:S112")
     protected <T> T getInstanceOf(Class<T> clazz) {
         try {
             return clazz.getDeclaredConstructor().newInstance();

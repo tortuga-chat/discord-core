@@ -31,6 +31,7 @@ public abstract class BaseTextCommandHandler implements TextCommandHandler {
         handle();
     }
 
+    @SuppressWarnings("java:S1130")
     protected void load(MessageCreateEvent event) throws BotException {
         this.event = event;
         this.api = event.getApi();

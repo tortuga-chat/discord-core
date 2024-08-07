@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -23,12 +24,19 @@ import java.util.stream.Collectors;
 /**
  * Base class of a discord bot, abstracts {@link org.javacord.api} implementation.
  */
+@SuppressWarnings("unused")
 public class DiscordBot {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscordBot.class);
-    private DiscordApi api;
-    private final DiscordApiBuilder builder;
     private static final Reflections REFLECTIONS = new Reflections(DiscordResource.get(DiscordProperties.BASE_PACKAGE));
+    private static final HashMap<Class<?>, GloballyAttachableListener> LISTENERS = new HashMap<>();
+
+    private final DiscordApiBuilder builder;
+    private DiscordApi api;
+
+    static {
+        initializeListeners();
+    }
 
     public DiscordBot(String token) {
         this(token, true);
@@ -58,9 +66,18 @@ public class DiscordBot {
                 .thenCompose(v -> this.builder.login())
                 .whenComplete((a, e) -> this.api = a)
                 .whenComplete((a, e) -> {
-                    if (DiscordResource.getBoolean(DiscordProperties.DISCORD_COMMAND_UPDATE, false))
+                    if (Boolean.TRUE.equals(DiscordResource.getBoolean(DiscordProperties.DISCORD_COMMAND_UPDATE, false)))
                         updateSlashCommands();
                 });
+    }
+
+    public CompletableFuture<DiscordApi> restart() {
+        disconnect();
+        return start();
+    }
+
+    public void disconnect() {
+        api.disconnect().join();
     }
 
     public void updateSlashCommands() {
@@ -76,12 +93,17 @@ public class DiscordBot {
                 .map(handler -> {
                     Command command = handler.getAnnotation(Command.class);
                     SlashCommandHandler instance = getInstanceOf(handler);
-                    return new SlashCommandBuilder()
+                    SlashCommandBuilder slashCommandBuilder = new SlashCommandBuilder()
                             .setName(command.name())
                             .setDescription(command.description())
                             .setEnabledInDms(instance.enabledInDMs())
                             .setNsfw(instance.nsfw())
                             .setOptions(getInstanceOf(handler).getOptions());
+
+                    if (command.permissions() != null)
+                        slashCommandBuilder.setDefaultEnabledForPermissions(command.permissions());
+
+                    return slashCommandBuilder;
                 })
                 .collect(Collectors.toSet());
     }
@@ -96,17 +118,24 @@ public class DiscordBot {
     }
 
     /**
-     * Searches for classes annotated by {@link Listener} and creates instances of them via {@link #getInstanceOf(Class)}.
-     * Adds this instances to the DiscordApi to be created by the {@link DiscordApiBuilder} of this class.
+     * Adds instances of classes annotated by {@link Listener} to the DiscordApi to be created by the {@link DiscordApiBuilder} of this class.
      */
     protected void attachListeners() {
+        LISTENERS.forEach((key, value) -> this.builder.addListener(key.asSubclass(GloballyAttachableListener.class), value));
+    }
+
+    /**
+     * Searches for classes annotated by {@link Listener}, creates instances of them via {@link #getInstanceOf(Class)},
+     * and saves in cache.
+     */
+    private static void initializeListeners() {
         REFLECTIONS.getTypesAnnotatedWith(Listener.class).forEach(listener -> {
             if (GloballyAttachableListener.class.isAssignableFrom(listener)) {
                 var registerAs = listener.getAnnotation(Listener.class).value();
                 var instance = (GloballyAttachableListener) getInstanceOf(listener);
 
-                LOG.debug("Registering {} as a {}", listener.getSimpleName(), registerAs.getSimpleName());
-                this.builder.addListener(registerAs.asSubclass(GloballyAttachableListener.class), instance);
+                LOG.debug("Caching listener {} as a {}", listener.getSimpleName(), registerAs.getSimpleName());
+                LISTENERS.put(registerAs, instance);
             } else {
                 LOG.warn("Class {} should extend a listener", listener);
             }
@@ -122,7 +151,8 @@ public class DiscordBot {
      * @return the instance of <code>clazz</code>
      * @param <T> the Type to instantiate
      */
-    protected <T> T getInstanceOf(Class<T> clazz) {
+    @SuppressWarnings("java:S112")
+    protected static <T> T getInstanceOf(Class<T> clazz) {
         try {
             return clazz.getDeclaredConstructor().newInstance();
         } catch (Exception e) {

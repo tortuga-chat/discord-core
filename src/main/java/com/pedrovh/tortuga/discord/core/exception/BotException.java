@@ -13,11 +13,13 @@ import static com.pedrovh.tortuga.discord.core.DiscordProperties.COLOR_WARNING;
 
 public class BotException extends Exception {
 
-    private boolean warning;
+    private final boolean warning;
 
     public BotException() {
+        this.warning = false;
     }
 
+    @SuppressWarnings("unused")
     public BotException(String message) {
         this(message, false);
     }

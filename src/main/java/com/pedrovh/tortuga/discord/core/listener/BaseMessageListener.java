@@ -15,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import static com.pedrovh.tortuga.discord.core.DiscordProperties.COMMAND_TEXT_PREFIX;
 import static com.pedrovh.tortuga.discord.core.DiscordProperties.MESSAGE_CHARACTER_LIMIT;
 
+@SuppressWarnings("unused")
 public abstract class BaseMessageListener implements MessageCreateListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(BaseMessageListener.class);
@@ -56,7 +57,7 @@ public abstract class BaseMessageListener implements MessageCreateListener {
 
             } catch (BotException e) {
                 if (e.isWarning())
-                    LOG.warn(String.format("Error handling text command %s", command));
+                    LOG.warn("Error handling text command {}", command);
                 else
                     LOG.warn(String.format("Error handling text command %s", command), e);
                 message.reply(e.getEmbed());
@@ -83,8 +84,10 @@ public abstract class BaseMessageListener implements MessageCreateListener {
      * Remember to override {@link #validate(Message, String)} if that's your case and you have a prefix configured.
      * @param event the slash command event
      */
+    @SuppressWarnings("java:S1130")
     protected void handlerNotFound(MessageCreateEvent event) throws BotException {
-        LOG.warn("Text handler not found for command '{}'", event.getMessageContent().split(" ")[0]);
+        if (LOG.isWarnEnabled())
+            LOG.warn("Text handler not found for command '{}'", event.getMessageContent().split(" ")[0]);
     }
 
     /**
@@ -104,6 +107,7 @@ public abstract class BaseMessageListener implements MessageCreateListener {
                (prefix != null && content.startsWith(prefix));
     }
 
+    @SuppressWarnings("java:S112")
     protected <T> T getInstanceOf(Class<T> clazz) {
         try {
             return clazz.getDeclaredConstructor().newInstance();

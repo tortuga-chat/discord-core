@@ -25,6 +25,7 @@ public abstract class BaseSlashCommandHandler implements SlashCommandHandler {
         handle();
     }
 
+    @SuppressWarnings("java:S1130")
     protected void load(SlashCommandCreateEvent event) throws BotException {
         this.event = event;
         this.api = event.getApi();

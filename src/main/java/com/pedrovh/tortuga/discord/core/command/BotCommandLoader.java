@@ -40,6 +40,8 @@ public class BotCommandLoader {
         LOG.info("Successfully loaded command handlers");
     }
 
+    private BotCommandLoader() {}
+
     public static Collection<Class<? extends SlashCommandHandler>> getSlashHandlers() {
         return SLASH_HANDLERS.values();
     }

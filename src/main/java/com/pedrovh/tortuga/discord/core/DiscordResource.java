@@ -8,10 +8,13 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.Properties;
 
+@SuppressWarnings({"unused", "java:S2447"})
 public class DiscordResource {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DiscordProperties.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DiscordResource.class);
     protected static final Properties prop = new Properties();
+
+    private DiscordResource(){}
 
     public static String get(String key, String defaultValue) {
         return Optional.ofNullable(get(key)).orElse(defaultValue);
@@ -69,7 +72,7 @@ public class DiscordResource {
         try {
             return Color.decode(value);
         } catch (NumberFormatException e) {
-            LOG.warn("Unable to parse integer for key '{}'", key);
+            LOG.warn("Unable to parse color for key '{}'", key);
             return null;
         }
     }

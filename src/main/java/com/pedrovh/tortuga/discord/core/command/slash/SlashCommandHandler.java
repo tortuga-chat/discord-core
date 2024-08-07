@@ -34,7 +34,7 @@ public interface SlashCommandHandler {
      * Don't use fields abstracted by {@link BaseSlashCommandHandler} and children. Those are request specific,
      * so they will be <code>null</code> when this method gets called.
      *
-     * @return
+     * @return a list of options {@link SlashCommandOption}
      */
     List<SlashCommandOption> getOptions();
 

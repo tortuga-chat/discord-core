@@ -8,8 +8,8 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 public class MessageResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(MessageResource.class);
@@ -31,6 +31,8 @@ public class MessageResource {
         }
     }
 
+    private MessageResource(){}
+
     public static String getMessage(String key) {
         return getMessage(Locale.getDefault(), key);
     }
@@ -45,7 +47,7 @@ public class MessageResource {
         } catch (MissingResourceException e) {
             LOG.warn("Resource value not found for key: '{}' for locale '{}'", key, locale);
         } catch (NullPointerException e) {
-            LOG.error(String.format("Bundle not found for locale %s", locale));
+            LOG.error("Bundle not found for locale {}", locale);
         }
         return null;
     }
@@ -66,7 +68,7 @@ public class MessageResource {
                 .map(tag -> tag.replace("_", "-"))
                 .map(Locale::forLanguageTag)
                 .map(locale -> SlashCommandOptionChoice.create(locale.getDisplayName(), locale.toString()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public static List<String> getSupportedLocales() {
@@ -74,7 +76,7 @@ public class MessageResource {
                 .stream()
                 .map(Locale::toString)
                 .map(str -> str.replace('_', '-'))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private static URL findResourceURL(final String locale) {
