@@ -53,7 +53,7 @@ public class MessageResource {
     }
 
     public static String getMessage(Locale locale, String key, Object... args) {
-        var value = getMessage(locale, String.format(key, args));
+        String value = getMessage(locale, String.format(key, args));
         if (value == null) return null;
 
         for (int i = 0; i < args.length; i++) {
@@ -94,7 +94,7 @@ public class MessageResource {
         var matcher = pattern.matcher(value);
 
         while (matcher.find() && !matcher.group().matches("\\{\\d}")) {
-            var innerKey = matcher.group().substring(1, matcher.group().length()-1);
+            String innerKey = matcher.group().substring(1, matcher.group().length()-1);
             value = value.replace(matcher.group(), BUNDLES.get(locale).getString(innerKey));
         }
         return value;

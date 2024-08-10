@@ -25,11 +25,12 @@ public abstract class BaseMessageListener implements MessageCreateListener {
      */
     @Override
     public void onMessageCreate(MessageCreateEvent event) {
-        var message = event.getMessage();
-        var content = message.getContent();
-        var prefix = DiscordResource.get(COMMAND_TEXT_PREFIX);
+        final String prefix = DiscordResource.get(COMMAND_TEXT_PREFIX);
+        final Message message = event.getMessage();
+        String content = message.getContent();
 
-        if(!validate(message, prefix)) return;
+        if(!validate(message, prefix))
+            return;
 
         if (prefix != null)
             content = content.substring(prefix.length());
@@ -37,35 +38,42 @@ public abstract class BaseMessageListener implements MessageCreateListener {
         final String command = content.split(" ")[0];
         var handlerClass = BotCommandLoader.getHandlerForText(command);
 
-        CompletableFuture.runAsync(() -> {
-            try {
-                if (handlerClass == null) {
-                    handlerNotFound(event);
-                    return;
-                }
-                LOG.info("User {} sent text command '{}' in {}",
-                        message.getAuthor().getName(),
-                        command,
-                        message.getChannel());
+        CompletableFuture.runAsync(() -> accept(handlerClass, event, command));
+    }
 
-                var instance = getInstanceOf(handlerClass);
-
-                if (!instance.enabledInDMs() && !message.getChannel().getType().isServerChannelType())
-                    return;
-
-                handle(instance, event);
-
-            } catch (BotException e) {
-                if (e.isWarning())
-                    LOG.warn("Error handling text command {}", command);
-                else
-                    LOG.warn(String.format("Error handling text command %s", command), e);
-                message.reply(e.getEmbed());
-            } catch (Exception e) {
-                LOG.error(String.format("Error handling text command %s", command), e);
-                message.reply(new BotException(e).getEmbed());
+    /**
+     * Accepts the validated command and calls on the handler to handle the request
+     * @param handlerClass the {@link TextCommandHandler} that will handle the command
+     * @param event the message create event
+     * @param command the command in requested
+     */
+    protected void accept(Class<? extends TextCommandHandler> handlerClass, MessageCreateEvent event, String command) {
+        final Message message = event.getMessage();
+        try {
+            if (handlerClass == null) {
+                handlerNotFound(event);
+                return;
             }
-        });
+            LOG.info("User {} sent text command '{}' in {}",
+                    message.getAuthor().getName(),
+                    command,
+                    message.getChannel());
+
+            var instance = getInstanceOf(handlerClass);
+
+            if (!instance.enabledInDMs() && !message.getChannel().getType().isServerChannelType())
+                return;
+
+            handle(instance, event);
+        } catch (Exception e) {
+            BotException bot = e instanceof BotException ? (BotException) e : new BotException(e); // NOSONAR
+            if (bot.isWarning())
+                LOG.warn("Error handling text command {}", command);
+            else
+                LOG.warn(String.format("Error handling text command %s", command), e);
+
+            message.reply(bot.getEmbed());
+        }
     }
 
     /**
@@ -107,6 +115,15 @@ public abstract class BaseMessageListener implements MessageCreateListener {
                (prefix != null && content.startsWith(prefix));
     }
 
+    /**
+     * Creates a new instance of the class <code>clazz</code>. <br>
+     * You can override this method if you want to have control over how your message handlers
+     * are instantiated (for example, get the instance through the application context)
+     *
+     * @param clazz the class to get the instance
+     * @return the instance of <code>clazz</code>
+     * @param <T> the Type to instantiate
+     */
     @SuppressWarnings("java:S112")
     protected <T> T getInstanceOf(Class<T> clazz) {
         try {

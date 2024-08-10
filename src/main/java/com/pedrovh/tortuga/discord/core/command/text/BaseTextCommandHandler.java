@@ -39,8 +39,8 @@ public abstract class BaseTextCommandHandler implements TextCommandHandler {
         this.user = event.getMessageAuthor();
         this.message = event.getMessage();
 
-        var prefix = DiscordResource.get(COMMAND_TEXT_PREFIX);
-        var content = prefix != null ? message.getContent().substring(prefix.length()) : message.getContent();
+        String prefix = DiscordResource.get(COMMAND_TEXT_PREFIX);
+        String content = prefix != null ? message.getContent().substring(prefix.length()) : message.getContent();
         this.args = List.of(content.split(" "));
     }
 

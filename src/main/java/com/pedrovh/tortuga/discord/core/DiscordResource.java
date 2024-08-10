@@ -7,6 +7,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings({"unused", "java:S2447"})
 public class DiscordResource {
@@ -15,6 +16,8 @@ public class DiscordResource {
     protected static final Properties prop = new Properties();
 
     private DiscordResource(){}
+
+    // region getters
 
     public static String get(String key, String defaultValue) {
         return Optional.ofNullable(get(key)).orElse(defaultValue);
@@ -28,7 +31,7 @@ public class DiscordResource {
         if (prop.isEmpty()) {
             load();
         }
-        var value = prop.getProperty(key);
+        String value = prop.getProperty(key);
         if (value == null) {
             LOG.debug("Value for key '{}' not found in properties", key);
             return null;
@@ -41,7 +44,7 @@ public class DiscordResource {
     }
 
     public static Integer getInt(String key) {
-        var value = get(key);
+        String value = get(key);
         if(value == null) return null;
         try {
             return Integer.parseInt(value);
@@ -52,7 +55,7 @@ public class DiscordResource {
     }
 
     public static Boolean getBoolean(String key) {
-        var value = get(key);
+        String value = get(key);
         if(value == null) return null;
         try {
             return Boolean.parseBoolean(value);
@@ -66,8 +69,19 @@ public class DiscordResource {
         return Optional.ofNullable(getBoolean(key)).orElse(defaultValue);
     }
 
+    public static TimeUnit getTimeUnit(String key) {
+        String value = get(key);
+        if(value == null) return null;
+        try {
+            return TimeUnit.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            LOG.warn("Unable to parse time unit for key '{}'", key);
+            return null;
+        }
+    }
+
     public static Color getColor(String key) {
-        var value = get(key);
+        String value = get(key);
         if(value == null) return null;
         try {
             return Color.decode(value);
@@ -76,6 +90,36 @@ public class DiscordResource {
             return null;
         }
     }
+
+    // endregion gets
+
+    // region parse value or get property
+
+    public static int parseValueOrGetPropertyInteger(String str) {
+        Integer value;
+        try {
+            value = Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            value = DiscordResource.getInt(str);
+            if (value == null)
+                throw new IllegalArgumentException(String.format("Invalid value: '%s'", str));
+        }
+        return value;
+    }
+
+    public static TimeUnit parseValueOrGetPropertyTimeUnit(String content) {
+        TimeUnit value;
+        try {
+            value = TimeUnit.valueOf(content);
+        } catch (IllegalArgumentException e) {
+            value = DiscordResource.getTimeUnit(content);
+            if (value == null)
+                throw new IllegalArgumentException(String.format("Invalid value: '%s'", content));
+        }
+        return value;
+    }
+
+    // endregion
 
     public static void load() {
         try {

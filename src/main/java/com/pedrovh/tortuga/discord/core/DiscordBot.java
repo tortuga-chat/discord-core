@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 /**
  * Base class of a discord bot, abstracts {@link org.javacord.api} implementation.
  */
-@SuppressWarnings("unused")
 public class DiscordBot {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscordBot.class);
@@ -33,10 +32,6 @@ public class DiscordBot {
 
     private final DiscordApiBuilder builder;
     private DiscordApi api;
-
-    static {
-        initializeListeners();
-    }
 
     public DiscordBot(String token) {
         this(token, true);
@@ -54,6 +49,7 @@ public class DiscordBot {
 
     public DiscordBot(DiscordApiBuilder builder) {
         this.builder = builder;
+        initializeListeners();
     }
 
     /**
@@ -64,20 +60,21 @@ public class DiscordBot {
         return CompletableFuture
                 .runAsync(this::attachListeners)
                 .thenCompose(v -> this.builder.login())
-                .whenComplete((a, e) -> this.api = a)
+                .thenApply(a -> this.api = a)
                 .whenComplete((a, e) -> {
+                    LOG.info("Bot connected.");
                     if (Boolean.TRUE.equals(DiscordResource.getBoolean(DiscordProperties.DISCORD_COMMAND_UPDATE, false)))
                         updateSlashCommands();
                 });
     }
 
     public CompletableFuture<DiscordApi> restart() {
-        disconnect();
-        return start();
+        LOG.info("Restarting bot...");
+        return disconnect().thenCompose(v -> start());
     }
 
-    public void disconnect() {
-        api.disconnect().join();
+    public CompletableFuture<Void> disconnect() {
+        return api.disconnect().thenRun(() -> LOG.info("Bot disconnected."));
     }
 
     public void updateSlashCommands() {
@@ -128,10 +125,10 @@ public class DiscordBot {
      * Searches for classes annotated by {@link Listener}, creates instances of them via {@link #getInstanceOf(Class)},
      * and saves in cache.
      */
-    private static void initializeListeners() {
+    private void initializeListeners() {
         REFLECTIONS.getTypesAnnotatedWith(Listener.class).forEach(listener -> {
             if (GloballyAttachableListener.class.isAssignableFrom(listener)) {
-                var registerAs = listener.getAnnotation(Listener.class).value();
+                Class<?> registerAs = listener.getAnnotation(Listener.class).value();
                 var instance = (GloballyAttachableListener) getInstanceOf(listener);
 
                 LOG.debug("Caching listener {} as a {}", listener.getSimpleName(), registerAs.getSimpleName());
@@ -151,12 +148,12 @@ public class DiscordBot {
      * @return the instance of <code>clazz</code>
      * @param <T> the Type to instantiate
      */
-    @SuppressWarnings("java:S112")
-    protected static <T> T getInstanceOf(Class<T> clazz) {
+    protected <T> T getInstanceOf(Class<T> clazz) {
         try {
             return clazz.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            LOG.error(String.format("Error instantiating class %s", clazz.getName()), e);
+            return null;
         }
     }
 

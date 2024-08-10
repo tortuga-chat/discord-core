@@ -1,6 +1,5 @@
 package com.pedrovh.tortuga.discord.core;
 
-@SuppressWarnings({"unused","java:S1118"})
 public class DiscordProperties {
     public static final String BASE_PACKAGE = "basePackage";
     public static final String DISCORD_TOKEN = "token";
@@ -10,4 +9,6 @@ public class DiscordProperties {
     public static final String COLOR_SUCCESS = "color.success";
     public static final String COLOR_WARNING = "color.warning";
     public static final String COLOR_ERROR = "color.error";
+
+    private DiscordProperties() {}
 }
