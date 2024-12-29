@@ -11,6 +11,9 @@ import java.util.Optional;
 import static com.pedrovh.tortuga.discord.core.DiscordProperties.COLOR_ERROR;
 import static com.pedrovh.tortuga.discord.core.DiscordProperties.COLOR_WARNING;
 
+/**
+ * Exception related to Bot operations.
+ */
 public class BotException extends Exception {
 
     private final boolean warning;

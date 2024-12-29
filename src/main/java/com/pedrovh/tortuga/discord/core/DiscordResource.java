@@ -3,13 +3,14 @@ package com.pedrovh.tortuga.discord.core;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.awt.*;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-@SuppressWarnings({"unused", "java:S2447"})
+@SuppressWarnings("unused")
 public class DiscordResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscordResource.class);
@@ -43,6 +44,7 @@ public class DiscordResource {
         return value;
     }
 
+    @Nullable
     public static Integer getInt(String key) {
         String value = get(key);
         if(value == null) return null;
@@ -54,6 +56,7 @@ public class DiscordResource {
         }
     }
 
+    @Nullable
     public static Boolean getBoolean(String key) {
         String value = get(key);
         if(value == null) return null;

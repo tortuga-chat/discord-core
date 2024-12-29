@@ -2,6 +2,7 @@ package com.pedrovh.tortuga.discord.core.listener;
 
 import com.pedrovh.tortuga.discord.core.DiscordResource;
 import com.pedrovh.tortuga.discord.core.command.BotCommandLoader;
+import com.pedrovh.tortuga.discord.core.command.Command;
 import com.pedrovh.tortuga.discord.core.command.text.TextCommandHandler;
 import com.pedrovh.tortuga.discord.core.exception.BotException;
 import org.javacord.api.entity.message.Message;
@@ -15,6 +16,10 @@ import java.util.concurrent.CompletableFuture;
 import static com.pedrovh.tortuga.discord.core.DiscordProperties.COMMAND_TEXT_PREFIX;
 import static com.pedrovh.tortuga.discord.core.DiscordProperties.MESSAGE_CHARACTER_LIMIT;
 
+/**
+ * Base implementation of {@link MessageCreateListener}. Reads all messages sent by users and tries to interpret them as
+ * a text {@link Command} based on the defined prefix.
+ */
 @SuppressWarnings("unused")
 public abstract class BaseMessageListener implements MessageCreateListener {
 
@@ -70,6 +75,7 @@ public abstract class BaseMessageListener implements MessageCreateListener {
             if (bot.isWarning())
                 LOG.warn("Error handling text command {}", command);
             else
+                //noinspection StringConcatenationArgumentToLogCall
                 LOG.warn(String.format("Error handling text command %s", command), e);
 
             message.reply(bot.getEmbed());
@@ -93,7 +99,7 @@ public abstract class BaseMessageListener implements MessageCreateListener {
      * @param event the slash command event
      */
     @SuppressWarnings("java:S1130")
-    protected void handlerNotFound(MessageCreateEvent event) throws BotException {
+    protected void handlerNotFound(MessageCreateEvent event) {
         if (LOG.isWarnEnabled())
             LOG.warn("Text handler not found for command '{}'", event.getMessageContent().split(" ")[0]);
     }

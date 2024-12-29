@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import static com.pedrovh.tortuga.discord.core.DiscordResource.parseValueOrGetPropertyInteger;
 import static com.pedrovh.tortuga.discord.core.DiscordResource.parseValueOrGetPropertyTimeUnit;
 
-@SuppressWarnings("java:S6548")
+@SuppressWarnings({"java:S6548", "unused"})
 public class SchedulerService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerService.class);

@@ -13,6 +13,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.pedrovh.tortuga.discord.core.DiscordProperties.BASE_PACKAGE;
 import static com.pedrovh.tortuga.discord.core.DiscordProperties.COMMAND_TEXT_PREFIX;
 
+/**
+ * Populates and serves caches with command handlers ({@link SlashCommandHandler} & {@link TextCommandHandler})
+ * and {@link Command} definitions.
+ */
+@SuppressWarnings("unused")
 public class BotCommandLoader {
 
     private static final Logger LOG = LoggerFactory.getLogger(BotCommandLoader.class);

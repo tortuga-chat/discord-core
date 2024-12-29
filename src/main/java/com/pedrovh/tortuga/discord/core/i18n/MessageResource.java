@@ -9,6 +9,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+/**
+ * Reads the resource bundle <code>i18n/messages</code> and resolves values based on {@link Locale}
+ */
 @SuppressWarnings("unused")
 public class MessageResource {
 
@@ -59,7 +62,7 @@ public class MessageResource {
         for (int i = 0; i < args.length; i++) {
             value = value.replace(String.format("{%d}", i), String.valueOf(args[i]));
         }
-        return value;
+        return parseAnyInnerKeys(locale, value);
     }
 
     public static List<SlashCommandOptionChoice> getSupportedLocalesAsChoices() {

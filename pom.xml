@@ -6,7 +6,7 @@
 
     <groupId>com.pedrovh</groupId>
     <artifactId>tortuga-discord-core</artifactId>
-    <version>0.5</version>
+    <version>0.7</version>
     <packaging>jar</packaging>
 
     <properties>

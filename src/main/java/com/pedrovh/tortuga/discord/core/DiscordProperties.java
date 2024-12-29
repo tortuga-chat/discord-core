@@ -10,5 +10,5 @@ public class DiscordProperties {
     public static final String COLOR_WARNING = "color.warning";
     public static final String COLOR_ERROR = "color.error";
 
-    private DiscordProperties() {}
+    protected DiscordProperties() {}
 }
