@@ -51,25 +51,13 @@ public class SchedulerService {
     protected void initTasksCache() {
         taskInstances = REFLECTIONS.getTypesAnnotatedWith(Task.class)
                 .stream()
+                .filter(c -> !isTaskEnabled(c.getName()) || !c.isInstance(Runnable.class) || !Modifier.isAbstract(c.getModifiers()))
                 .map(this::getInstanceOf)
-                .filter(c ->  {
-                    if (!(c instanceof Runnable)) {
-                        LOG.error("Class {} should implement Runnable interface!", c.getClass());
-                        return false;
-                    }
-                    return true;
-                })
                 .collect(Collectors.toSet());
 
         taskMethods = REFLECTIONS.getMethodsAnnotatedWith(Task.class)
                 .stream()
-                .filter(m -> {
-                    if (!Modifier.isStatic(m.getModifiers())) {
-                        LOG.error("Method {}#{} should be static!", m.getClass(), m.getName());
-                        return false;
-                    }
-                    return true;
-                })
+                .filter(m -> !isTaskEnabled(m.getName()) || !Modifier.isStatic(m.getModifiers()))
                 .collect(Collectors.toSet());
     }
 
@@ -96,7 +84,8 @@ public class SchedulerService {
                             try {
                                 task.invoke(null);
                             } catch (Exception e) {
-                                LOG.error(String.format("Error invoking method %s#%s", task.getClass().getName(), task.getName()), e);
+                                String message = String.format("Error invoking method %s#%s", task.getClass().getName(), task.getName());
+                                LOG.error(message, e);
                             }
                         },
                         String.format("%s#%s", task.getClass().getName(), task.getName())
@@ -117,9 +106,14 @@ public class SchedulerService {
         try {
             return clazz.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
-            LOG.error(String.format("Error instantiating class %s", clazz.getName()), e);
+            String message = String.format("Error instantiating class %s", clazz.getName());
+            LOG.error(message, e);
             return null;
         }
+    }
+
+    private Boolean isTaskEnabled(String name) {
+        return DiscordResource.getBoolean(String.format("%s.enabled", name), true);
     }
 
 }

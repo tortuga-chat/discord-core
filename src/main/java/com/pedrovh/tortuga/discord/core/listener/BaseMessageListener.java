@@ -98,8 +98,8 @@ public abstract class BaseMessageListener implements MessageCreateListener {
      * Remember to override {@link #validate(Message, String)} if that's your case and you have a prefix configured.
      * @param event the slash command event
      */
-    @SuppressWarnings("java:S1130")
-    protected void handlerNotFound(MessageCreateEvent event) {
+    @SuppressWarnings({"java:S1130", "RedundantThrows"})
+    protected void handlerNotFound(MessageCreateEvent event) throws BotException {
         if (LOG.isWarnEnabled())
             LOG.warn("Text handler not found for command '{}'", event.getMessageContent().split(" ")[0]);
     }
