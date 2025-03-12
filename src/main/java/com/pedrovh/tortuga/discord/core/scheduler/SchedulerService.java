@@ -51,13 +51,13 @@ public class SchedulerService {
     protected void initTasksCache() {
         taskInstances = REFLECTIONS.getTypesAnnotatedWith(Task.class)
                 .stream()
-                .filter(c -> isTaskEnabled(c.getName()) && c.isInstance(Runnable.class) && !Modifier.isAbstract(c.getModifiers()))
+                .filter(c -> !isTaskEnabled(c.getName()) || !c.isInstance(Runnable.class) || Modifier.isAbstract(c.getModifiers()))
                 .map(this::getInstanceOf)
                 .collect(Collectors.toSet());
 
         taskMethods = REFLECTIONS.getMethodsAnnotatedWith(Task.class)
                 .stream()
-                .filter(m -> isTaskEnabled(m.getName()) && !Modifier.isStatic(m.getModifiers()))
+                .filter(m -> !isTaskEnabled(m.getName()) || Modifier.isStatic(m.getModifiers()))
                 .collect(Collectors.toSet());
     }
 
