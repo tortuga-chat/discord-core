@@ -18,7 +18,7 @@
         <dependency>
             <groupId>com.pedrovh</groupId>
             <artifactId>tortuga-discord-core</artifactId>
-            <version>LATEST</version>
+            <version>0.7.1</version>
         </dependency>
         <!--logging-->
         <dependency>
