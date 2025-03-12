@@ -14,8 +14,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
-import static com.pedrovh.tortuga.discord.core.DiscordResource.parseValueOrGetPropertyInteger;
-import static com.pedrovh.tortuga.discord.core.DiscordResource.parseValueOrGetPropertyTimeUnit;
+import static com.pedrovh.tortuga.discord.core.DiscordResource.getPropertyOrParseDefaultInteger;
+import static com.pedrovh.tortuga.discord.core.DiscordResource.getPropertyOrParseDefaultTimeUnit;
 
 @SuppressWarnings({"java:S6548", "unused"})
 public class SchedulerService {
@@ -63,7 +63,7 @@ public class SchedulerService {
 
     protected void initScheduler() {
         if(scheduler != null)
-            LOG.info("Stopping scheduler - cancelled tasks: {}", scheduler.shutdownNow());
+            stopTasks();
         scheduler = Executors.newScheduledThreadPool(taskInstances.size() + taskMethods.size());
     }
 
@@ -93,12 +93,16 @@ public class SchedulerService {
         );
     }
 
-    protected void scheduleTask(Task annotation, Runnable runnable, String name) {
-        var delay = parseValueOrGetPropertyInteger(annotation.initialDelay());
-        var period = parseValueOrGetPropertyInteger(annotation.period());
-        var unit = parseValueOrGetPropertyTimeUnit(annotation.unit());
+    public void stopTasks() {
+        LOG.info("Stopping scheduler - cancelled tasks: {}", scheduler.shutdownNow());
+    }
 
-        LOG.debug("Scheduling task {} to run with a delay of {} {} and period of {} {}", name, delay,  unit, period, unit);
+    protected void scheduleTask(Task annotation, Runnable runnable, String name) {
+        var delay = getPropertyOrParseDefaultInteger(String.format("%s.delay", name), annotation.initialDelay());
+        var period = getPropertyOrParseDefaultInteger(String.format("%s.period", name), annotation.period());
+        var unit = getPropertyOrParseDefaultTimeUnit(String.format("%s.unit", name), annotation.unit());
+
+        LOG.debug("Scheduling task {} to run with a delay of {} {} and period of {} {}", name, delay, unit, period, unit);
         scheduler.scheduleAtFixedRate(runnable, delay, period, unit);
     }
 

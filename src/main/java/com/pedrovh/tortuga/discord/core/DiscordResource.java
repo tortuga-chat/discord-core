@@ -20,14 +20,6 @@ public class DiscordResource {
 
     // region getters
 
-    public static String get(String key, String defaultValue) {
-        return Optional.ofNullable(get(key)).orElse(defaultValue);
-    }
-
-    public static Integer getInt(String key, Integer defaultValue) {
-        return Optional.ofNullable(getInt(key)).orElse(defaultValue);
-    }
-
     public static String get(String key) {
         if (prop.isEmpty()) {
             load();
@@ -44,6 +36,10 @@ public class DiscordResource {
         return value;
     }
 
+    public static String get(String key, String defaultValue) {
+        return Optional.ofNullable(get(key)).orElse(defaultValue);
+    }
+
     @Nullable
     public static Integer getInt(String key) {
         String value = get(key);
@@ -54,6 +50,10 @@ public class DiscordResource {
             LOG.warn("Unable to parse integer for key '{}'", key);
             return null;
         }
+    }
+
+    public static Integer getInt(String key, Integer defaultValue) {
+        return Optional.ofNullable(getInt(key)).orElse(defaultValue);
     }
 
     @Nullable
@@ -83,6 +83,10 @@ public class DiscordResource {
         }
     }
 
+    public static TimeUnit getTimeUnit(String key, TimeUnit defaultValue) {
+        return Optional.ofNullable(getTimeUnit(key)).orElse(defaultValue);
+    }
+
     public static Color getColor(String key) {
         String value = get(key);
         if(value == null) return null;
@@ -98,28 +102,12 @@ public class DiscordResource {
 
     // region parse value or get property
 
-    public static int parseValueOrGetPropertyInteger(String str) {
-        Integer value;
-        try {
-            value = Integer.parseInt(str);
-        } catch (NumberFormatException e) {
-            value = DiscordResource.getInt(str);
-            if (value == null)
-                throw new IllegalArgumentException(String.format("Invalid value: '%s'", str));
-        }
-        return value;
+    public static int getPropertyOrParseDefaultInteger(String prop, String str) {
+        return getInt(prop, Integer.parseInt(str));
     }
 
-    public static TimeUnit parseValueOrGetPropertyTimeUnit(String content) {
-        TimeUnit value;
-        try {
-            value = TimeUnit.valueOf(content);
-        } catch (IllegalArgumentException e) {
-            value = DiscordResource.getTimeUnit(content);
-            if (value == null)
-                throw new IllegalArgumentException(String.format("Invalid value: '%s'", content));
-        }
-        return value;
+    public static TimeUnit getPropertyOrParseDefaultTimeUnit(String prop, String str) {
+        return getTimeUnit(prop, TimeUnit.valueOf(str));
     }
 
     // endregion
